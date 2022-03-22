@@ -1,8 +1,10 @@
 const express = require('express')
 const app = express()
-app.use(express.json())
-require('dotenv').config();
 const oData = require('./modules/OData');
+const Clima = require('./modules/Clima');
+require('dotenv').config();
+
+app.use(express.json())
 
 const port = 3000
 const functions = require('firebase-functions');
@@ -13,8 +15,6 @@ const req = require('request');
 app.post("/webhook", (request, response) => {
 
   const agent = new WebhookClient({ request: request, response: response });
-  // console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
-  // console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
 
   function welcome(agent) {
     return agent.add(`¡Hola, soy el bot de búsqueda de SAP! ¿Que información deseas consultar?`);
@@ -29,7 +29,15 @@ app.post("/webhook", (request, response) => {
 
     const claseDoc = agent.parameters.clasedocumento;
 
-    let params = {
+    const climaRequest = {
+      municipio: 46220,
+      apiKey: process.env.API_KEY
+    }
+     let clima = await Clima.getClimaMunicipio(climaRequest);
+  
+     console.log(clima)
+
+    let oDataRequest = {
       url: process.env.ODATA_URL,
       entity: "TipoDocSet",
       filter: "ClaseDocumento",
@@ -37,7 +45,7 @@ app.post("/webhook", (request, response) => {
       basicAuth: process.env.BASIC_AUTH
     }
 
-    let oDataResponse = await oData.get(params);
+    let oDataResponse = await oData.get(oDataRequest);
     let claseDocumento = oDataResponse[0].ClaseDocumento;
     let denom = oDataResponse[0].Denominacion;
     agent.add(`Clase de documento: ${claseDocumento} | Denominacion: ${denom}`);
