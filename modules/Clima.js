@@ -21,15 +21,49 @@ module.exports.getClimaMunicipio = async function (request) {
 
         if (response) {
 
+            let temperaturaMaxima, temperaturaMinima, sensacionMaxima, sensacionMinima, estadoCielo;
+
             let req = {
                 url: response.data.datos
             }
 
             let clima = await getClima(req)
-
             let days = clima[0].prediccion.dia;
 
-            resolve(days)
+            for (let i = 0; i < days.length; i++) {
+                
+                let responseDate = days[i].fecha.substring(0, 10);
+
+                if(request.date === responseDate){
+                    
+                    temperaturaMaxima = days[i].temperatura.maxima
+                    temperaturaMinima = days[i].temperatura.minima
+                    sensacionMaxima = days[i].sensTermica.minima
+                    sensacionMinima = days[i].sensTermica.minima
+
+                    for (let j = 0; j < days[i].estadoCielo.length; j++) {
+                        
+                        if(days[i].estadoCielo[j].descripcion !== ''){
+                            estadoCielo = days[i].estadoCielo[j].descripcion;
+                            break;
+                        }
+
+                    } 
+
+                }
+               
+             }
+
+             let res = {
+                 "temperaturaMaxima": temperaturaMaxima,
+                 "temperaturaMinima": temperaturaMinima,
+                 "sensacionMaxima": sensacionMaxima,
+                 "sensacionMinima": sensacionMinima,
+                 "estadoCielo" : estadoCielo
+             }
+            // let temperaturaMaxima = days.temperatura.maxima;
+
+            resolve(res)
         }
     });
 }
