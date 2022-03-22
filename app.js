@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const oData = require('./modules/OData');
 const Clima = require('./modules/Clima');
+const Date = require('./modules/Date');
 require('dotenv').config();
 
 app.use(express.json())
@@ -29,13 +30,18 @@ app.post("/webhook", (request, response) => {
 
     const claseDoc = agent.parameters.clasedocumento;
 
+    let today = Date.today();
+
     const climaRequest = {
       municipio: 46220,
-      apiKey: process.env.API_KEY
+      apiKey: process.env.API_KEY,
+      date: today
     }
-     let clima = await Clima.getClimaMunicipio(climaRequest);
-  
-     console.log(clima)
+
+    let clima = await Clima.getClimaMunicipio(climaRequest);
+
+    console.log(today)
+    console.log(clima)
 
     let oDataRequest = {
       url: process.env.ODATA_URL,

@@ -16,9 +16,9 @@ module.exports.get = function (params) {
     return new Promise(function (resolve, reject) {
       let url = params.url;
       let csrfToken;
-      //  let urlReq = "/TipoDocSet?$format=json";
+
       let urlReq = `/${params.entity}?$filter=(${params.filter} eq'${params.value}')&$format=json`;
-      console.log(urlReq);
+   
       req({
         url: url + urlReq,
         method:'GET',

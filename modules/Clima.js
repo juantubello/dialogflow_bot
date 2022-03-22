@@ -26,7 +26,10 @@ module.exports.getClimaMunicipio = async function (request) {
             }
 
             let clima = await getClima(req)
-            resolve(clima)
+
+            let days = clima[0].prediccion.dia;
+
+            resolve(days)
         }
     });
 }
@@ -47,7 +50,9 @@ function getClima(request) {
         }
 
         if (response) {
-            resolve(JSON.stringify(response.data));
+            let data = JSON.stringify(response.data);
+            data = JSON.parse(data);
+            resolve(data);
         }
 
     });
