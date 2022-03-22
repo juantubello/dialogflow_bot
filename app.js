@@ -53,21 +53,15 @@ app.post("/webhook", (request, response) => {
     let city = agent.parameters.location.city;
     let date = DateCustom.format(agent.parameters.date)
 
-    let dateString = DateCustom.dayString(date)
-
     const climaRequest = {
       municipio: Municipio.getCode(city),
+      municipioStr: city,
       apiKey: process.env.API_KEY,
       date: date
     }
-     let clima = await Clima.getClimaMunicipio(climaRequest);
+    let climaResponse = await Clima.getClimaMunicipio(climaRequest);
 
-     let botResponse = `Para el dia ${dateString} se esperan en el municipio de ${city}\r\n Temperaturas🌡️\r\n Máximas de ${clima.temperaturaMaxima}°C \r\n`
-     botResponse = botResponse + `Minimas de ${clima.temperaturaMinima}°C\r\n`
-     botResponse = botResponse + `Sensacion Térimica🌡️\r\n Máximas de ${clima.sensacionMaxima}°C \r\n`
-     botResponse = botResponse + `Minimas de ${clima.sensacionMinima}°C\r\n`
-     botResponse = botResponse + `Estado del cielo🌍\r\n ${clima.estadoCielo}⛅.`
-    agent.add(botResponse);
+    agent.add(climaResponse);
 
   }
 

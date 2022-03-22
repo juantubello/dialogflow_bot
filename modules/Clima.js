@@ -1,3 +1,5 @@
+const DateCustom = require('./Date');
+
 const axios = require('axios');
 
 module.exports.getClimaMunicipio = async function (request) {
@@ -31,37 +33,35 @@ module.exports.getClimaMunicipio = async function (request) {
             let days = clima[0].prediccion.dia;
 
             for (let i = 0; i < days.length; i++) {
-                
+
                 let responseDate = days[i].fecha.substring(0, 10);
 
-                if(request.date === responseDate){
-                    
+                if (request.date === responseDate) {
+
                     temperaturaMaxima = days[i].temperatura.maxima
                     temperaturaMinima = days[i].temperatura.minima
                     sensacionMaxima = days[i].sensTermica.minima
                     sensacionMinima = days[i].sensTermica.minima
 
                     for (let j = 0; j < days[i].estadoCielo.length; j++) {
-                        
-                        if(days[i].estadoCielo[j].descripcion !== ''){
+
+                        if (days[i].estadoCielo[j].descripcion !== '') {
                             estadoCielo = days[i].estadoCielo[j].descripcion;
                             break;
                         }
 
-                    } 
+                    }
 
                 }
-               
-             }
 
-             let res = {
-                 "temperaturaMaxima": temperaturaMaxima,
-                 "temperaturaMinima": temperaturaMinima,
-                 "sensacionMaxima": sensacionMaxima,
-                 "sensacionMinima": sensacionMinima,
-                 "estadoCielo" : estadoCielo
-             }
-            // let temperaturaMaxima = days.temperatura.maxima;
+            }
+            let dateString = DateCustom.dayString(request.date)
+
+            let res = `Para el dia ${dateString} se esperan en el municipio de ${request.municipioStr}\r\n ● Temperaturas🌡️\r\n ↑ Máximas de ${temperaturaMaxima}°C \r\n`
+            res = res + `↓ Minimas de ${temperaturaMinima}°C\r\n`
+            res = res + `● Sensacion Térmica🌡️\r\n ↑ Máxima de ${sensacionMaxima}°C \r\n`
+            res = res + `↓ Minima de ${sensacionMinima}°C\r\n`
+            res = res + `● Estado del cielo 🌞​\r\n ⛅ ${estadoCielo}`
 
             resolve(res)
         }
