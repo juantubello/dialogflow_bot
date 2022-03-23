@@ -4,7 +4,6 @@ const oData = require('./modules/OData');
 const Clima = require('./modules/Clima');
 const Municipio = require('./modules/Municipio');
 const DateCustom = require('./modules/Date');
-const emojiUnicode = require("emoji-unicode");
 
 require('dotenv').config();
 
@@ -21,7 +20,18 @@ app.post("/webhook", (request, response) => {
   const agent = new WebhookClient({ request: request, response: response });
 
   function welcome(agent) {
-    return agent.add(`¡Hola, soy el bot de búsqueda de SAP! ¿Que información deseas consultar?`);
+
+    let userInput = (agent.query).toUpperCase();
+
+    if (!(userInput.includes("CANCELAR") || userInput.includes("CANC") || userInput.includes("MENU"))) {
+      agent.add("👋 ¡Hola , soy el bot de búsqueda!")
+    }
+
+    if (userInput.includes("CANCELAR") || userInput.includes("CANC") || userInput.includes("MENU")) {
+      agent.add("¡Volviendo al menú...!")
+    }
+
+    agent.add(`¿Que información deseas consultar? 👇\r\n1 - Clima\r\n2 - Info SAP`);
   }
 
   function fallback(agent) {
@@ -44,25 +54,35 @@ app.post("/webhook", (request, response) => {
     let oDataResponse = await oData.get(oDataRequest);
     let claseDocumento = oDataResponse[0].ClaseDocumento;
     let denom = oDataResponse[0].Denominacion;
-    agent.add(`Clase de documento: ${claseDocumento} | Denominacion: ${denom}`);
+    agent.add(`▪ Clase de documento: ${claseDocumento}\r\n▪ Denominacion: ${denom}`);
+    agent.add("Si deseas volver al Menú principal escribe 👉 Menu")
 
   }
 
   async function climaHandler() {
 
-    let city = agent.parameters.location.city;
+    let city = agent.parameters.option;
     let date = DateCustom.format(agent.parameters.date)
 
     const climaRequest = {
       municipio: Municipio.getCode(city),
-      municipioStr: city,
+      municipioStr: Municipio.getName(city),
       apiKey: process.env.API_KEY,
       date: date
     }
     let climaResponse = await Clima.getClimaMunicipio(climaRequest);
 
-    agent.add(climaResponse);
+    agent.add(climaResponse.message);
 
+    if (!climaResponse.notFound) {
+      agent.add(`También puedo contarte sobre el clima detallado de ${climaRequest.municipioStr} en las próximas horas...\r\n Si deseas conocerlo escribe 👉 Si\r\n \r\n Si deseas volver al Menú principal escribe 👉 Menu`);
+    }else{
+      agent.add(`Si deseas volver al Menú principal escribe 👉 Menu`);
+    }
+  }
+
+  async function climaDetalladoHandler(agent) {
+    agent.add(`Soy el clima detallado`);
   }
 
   // Run the proper function handler based on the matched Dialogflow intent name
@@ -71,6 +91,8 @@ app.post("/webhook", (request, response) => {
   intentMap.set('Default Fallback Intent', fallback);
   intentMap.set('NeedClaseDocumento', claseDocumentoHandler);
   intentMap.set('Clima', climaHandler);
+  intentMap.set('ClimaDetallado', climaDetalladoHandler);
+  
   agent.handleRequest(intentMap);
 
 })

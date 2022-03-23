@@ -31,16 +31,17 @@ module.exports.getClimaMunicipio = async function (request) {
 
             let clima = await getClima(req)
             let days = clima[0].prediccion.dia;
+            let notFound = true
 
             for (let i = 0; i < days.length; i++) {
 
                 let responseDate = days[i].fecha.substring(0, 10);
 
                 if (request.date === responseDate) {
-
+                    notFound = false
                     temperaturaMaxima = days[i].temperatura.maxima
                     temperaturaMinima = days[i].temperatura.minima
-                    sensacionMaxima = days[i].sensTermica.minima
+                    sensacionMaxima = days[i].sensTermica.maxima
                     sensacionMinima = days[i].sensTermica.minima
 
                     for (let j = 0; j < days[i].estadoCielo.length; j++) {
@@ -55,15 +56,43 @@ module.exports.getClimaMunicipio = async function (request) {
                 }
 
             }
+            climaResponse = {
+                "notFound": notFound,
+                "message" : ""
+            }
+
+            if(notFound){
+                climaResponse.message = "❌ No existen predicciones del tiempo para fechas tan lejanas o anteriores al día de hoy ❌"
+                resolve(climaResponse)
+                return
+            }
+
+            let emoji
+
+            if (estadoCielo.includes("lluvia") || estadoCielo.includes("Lluvia") || estadoCielo.includes("LLUVIA")) {
+                emoji = `🌧️`
+            }else if(estadoCielo.includes("Tormenta") || estadoCielo.includes("tormenta") || estadoCielo.includes("TORMENTA")){
+                emoji = `🌩️`
+            }
+            else if(estadoCielo.includes("Intervalos Nubosos") || estadoCielo.includes("Intervalos nubosos") ){
+                emoji = `⛅`
+            }
+            else if(estadoCielo.includes("Nuboso") || estadoCielo.includes("Nubos") || estadoCielo.includes("nuboso")){
+                emoji = `☁️`
+            }else{
+                emoji = `☀️`
+            }
+
+
             let dateString = DateCustom.dayString(request.date)
 
-            let res = `Para el dia ${dateString} se esperan en el municipio de ${request.municipioStr}\r\n ● Temperaturas🌡️\r\n ↑ Máximas de ${temperaturaMaxima}°C \r\n`
-            res = res + `↓ Minimas de ${temperaturaMinima}°C\r\n`
-            res = res + `● Sensacion Térmica🌡️\r\n ↑ Máxima de ${sensacionMaxima}°C \r\n`
-            res = res + `↓ Minima de ${sensacionMinima}°C\r\n`
-            res = res + `● Estado del cielo 🌞​\r\n ⛅ ${estadoCielo}`
+            let res = `Para el dia ${dateString} se esperan en ${request.municipioStr}\r\n ● Temperaturas🌡️\r\n ↑ max. ${temperaturaMaxima}°C / ↓ min. ${temperaturaMinima}°C\r\n`
+            res = res + `● Sensacion Térmica🌡️\r\n ↑ max.  ${sensacionMaxima}°C / ↓ min. ${sensacionMinima}°C\r\n`
+            res = res + `● Estado del cielo 🌞​\r\n ${emoji} ${estadoCielo}`
 
-            resolve(res)
+            climaResponse.message = res
+
+            resolve(climaResponse)
         }
     });
 }
