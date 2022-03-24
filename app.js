@@ -31,7 +31,7 @@ app.post("/webhook", (request, response) => {
       agent.add("¡Volviendo al menú...!")
     }
 
-    agent.add(`¿Que información deseas consultar? 👇\r\n1 - Clima\r\n2 - Info SAP`);
+    agent.add(`¿Que información deseas consultar? 👇\r\n\r\n1 - Clima\r\n2 - Info SAP`);
   }
 
   function fallback(agent) {
@@ -75,14 +75,24 @@ app.post("/webhook", (request, response) => {
     agent.add(climaResponse.message);
 
     if (!climaResponse.notFound) {
-      agent.add(`También puedo contarte sobre el clima detallado de ${climaRequest.municipioStr} en las próximas horas...\r\n Si deseas conocerlo escribe 👉 Si\r\n \r\n Si deseas volver al Menú principal escribe 👉 Menu`);
+      agent.add(`También puedo contarte sobre el clima detallado en ${climaRequest.municipioStr} para las próximas horas del día de hoy...\r\n \r\nSi deseas conocerlo escribe 👉 Si\r\n \r\n Si deseas volver al Menú principal escribe 👉 Menu`);
     }else{
       agent.add(`Si deseas volver al Menú principal escribe 👉 Menu`);
     }
   }
 
   async function climaDetalladoHandler(agent) {
-    agent.add(`Soy el clima detallado`);
+
+    let city = agent.parameters.option;
+   
+    const climaRequest = {
+      municipio: Municipio.getCode(city),
+      municipioStr: Municipio.getName(city),
+      apiKey: process.env.API_KEY,
+      date: DateCustom.today()
+    }
+    let climDetalladoResponse = await Clima.getClimaMunicipioDetallado(climaRequest)
+    agent.add(`${climDetalladoResponse.message}\r\n Si deseas volver al Menú principal escribe 👉 Menu`);
   }
 
   // Run the proper function handler based on the matched Dialogflow intent name

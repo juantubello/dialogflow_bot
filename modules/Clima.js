@@ -58,10 +58,10 @@ module.exports.getClimaMunicipio = async function (request) {
             }
             climaResponse = {
                 "notFound": notFound,
-                "message" : ""
+                "message": ""
             }
 
-            if(notFound){
+            if (notFound) {
                 climaResponse.message = "❌ No existen predicciones del tiempo para fechas tan lejanas o anteriores al día de hoy ❌"
                 resolve(climaResponse)
                 return
@@ -71,24 +71,96 @@ module.exports.getClimaMunicipio = async function (request) {
 
             if (estadoCielo.includes("lluvia") || estadoCielo.includes("Lluvia") || estadoCielo.includes("LLUVIA")) {
                 emoji = `🌧️`
-            }else if(estadoCielo.includes("Tormenta") || estadoCielo.includes("tormenta") || estadoCielo.includes("TORMENTA")){
+            } else if (estadoCielo.includes("Tormenta") || estadoCielo.includes("tormenta") || estadoCielo.includes("TORMENTA")) {
                 emoji = `🌩️`
             }
-            else if(estadoCielo.includes("Intervalos Nubosos") || estadoCielo.includes("Intervalos nubosos") ){
+            else if (estadoCielo.includes("Intervalos Nubosos") || estadoCielo.includes("Intervalos nubosos")) {
                 emoji = `⛅`
             }
-            else if(estadoCielo.includes("Nuboso") || estadoCielo.includes("Nubos") || estadoCielo.includes("nuboso")){
+            else if (estadoCielo.includes("Nuboso") || estadoCielo.includes("Nubos") || estadoCielo.includes("nuboso")) {
                 emoji = `☁️`
-            }else{
+            } else {
                 emoji = `☀️`
             }
 
 
             let dateString = DateCustom.dayString(request.date)
 
-            let res = `Para el dia ${dateString} se esperan en ${request.municipioStr}\r\n ● Temperaturas🌡️\r\n ↑ max. ${temperaturaMaxima}°C / ↓ min. ${temperaturaMinima}°C\r\n`
-            res = res + `● Sensacion Térmica🌡️\r\n ↑ max.  ${sensacionMaxima}°C / ↓ min. ${sensacionMinima}°C\r\n`
+            let res = `Para el dia ${dateString}, se esperan en ${request.municipioStr}... 👇\r\n\r\n ● Temperaturas🌡️\r\n ↑ max. ${temperaturaMaxima}°C / ↓ min. ${temperaturaMinima}°C\r\n\r\n`
+            res = res + `● Sensacion Térmica🌡️\r\n ↑ max.  ${sensacionMaxima}°C / ↓ min. ${sensacionMinima}°C\r\n\r\n`
             res = res + `● Estado del cielo 🌞​\r\n ${emoji} ${estadoCielo}`
+
+            climaResponse.message = res
+
+            resolve(climaResponse)
+        }
+    });
+}
+
+module.exports.getClimaMunicipioDetallado = async function (request) {
+    return new Promise(async function (resolve, reject) {
+
+        const early_morning = {
+            cielo: "00-06",
+            temp: 6,
+            clock: `🕛`
+        }
+
+        const morning = {
+            cielo: "06-12",
+            temp: 12,
+            clock: `🕕`
+        }
+
+        const noon = {
+            cielo: "12-18",
+            temp: 18,
+            clock: `🕛`
+        }
+
+        const night = {
+            cielo: "18-24",
+            temp: 24,
+            clock: `🕕`
+        }
+
+        let config = {
+            method: 'get',
+            url: `https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/${request.municipio}`,
+            headers: {
+                'Accept': 'application/json',
+                'api_key': `${request.apiKey}`
+            }
+        };
+
+        let response;
+
+        try {
+            response = await axios(config);
+        } catch (error) {
+            reject(error)
+        }
+
+        if (response) {
+
+            let req = {
+                url: response.data.datos
+            }
+
+            let clima = await getClima(req)
+            let days = clima[0].prediccion.dia;
+
+            let earlyMorningValues = getDetailMessage(days, early_morning)
+            let morningValues = getDetailMessage(days, morning)
+            let noonValues = getDetailMessage(days, noon)
+            let nightValues = getDetailMessage(days, night)
+
+            climaResponse = {
+                "message": ""
+            }
+
+            let one = `Clima detallado en ${request.municipioStr} para el día de hoy... 👇\r\n\r\n`
+            res = one + earlyMorningValues + morningValues + noonValues + nightValues;
 
             climaResponse.message = res
 
@@ -119,5 +191,70 @@ function getClima(request) {
         }
 
     });
+}
+
+function getDetailMessage(prediction, filters) {
+
+    let response = {
+        hour: filters.cielo,
+        sky: "",
+        temp: ""
+    }
+
+    for (let indexPrediction = 0; indexPrediction < prediction.length; indexPrediction++) {
+
+        let responseDate = prediction[indexPrediction].fecha.substring(0, 10);
+
+        let date = DateCustom.today()
+
+        if (date === responseDate) {
+
+            for (let indexCielo = 0; indexCielo < prediction[indexPrediction].estadoCielo.length; indexCielo++) {
+
+                let periodoRes = prediction[indexPrediction].estadoCielo[indexCielo].periodo
+                let descRes = prediction[indexPrediction].estadoCielo[indexCielo].descripcion
+
+                if (periodoRes === filters.cielo && descRes !== '') {
+                    response.sky = descRes;
+                    break;
+                }
+
+            }
+
+            if (response.sky !== '') {
+
+                for (let indexTemperatura = 0; indexTemperatura < prediction[indexPrediction].temperatura.dato.length; indexTemperatura++) {
+                    if (prediction[indexPrediction].temperatura.dato[indexTemperatura].hora === filters.temp) {
+                        response.temp = prediction[indexPrediction].temperatura.dato[indexTemperatura].value;
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+  if (response.sky !== '') { 
+
+    let emoji
+
+    if (response.sky.includes("lluvia") || response.sky.includes("Lluvia") || response.sky.includes("LLUVIA")) {
+        emoji = `🌧️`
+    } else if (response.sky.includes("Tormenta") || response.sky.includes("tormenta") || response.sky.includes("TORMENTA")) {
+        emoji = `🌩️`
+    }
+    else if (response.sky.includes("Intervalos Nubosos") || response.sky.includes("Intervalos nubosos")) {
+        emoji = `⛅`
+    }
+    else if (response.sky.includes("Nuboso") || response.sky.includes("Nubos") || response.sky.includes("nuboso")) {
+        emoji = `☁️`
+    } else {
+        emoji = `☀️`
+    }
+
+    return `${filters.clock}${filters.cielo}h 🌡️${response.temp}°C ${emoji}${response.sky}\r\n`;
+  }
+
+  return ''
+    
 }
 
