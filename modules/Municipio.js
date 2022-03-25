@@ -1,3 +1,4 @@
+/* A function that returns the code of the municipality. */
 module.exports.getCode = function (municipio) {
 
     const CODE_SAGUNTO = 46220;
@@ -17,6 +18,7 @@ module.exports.getCode = function (municipio) {
 
     return code;
 }
+/* A function that returns the name of the municipality. */
 module.exports.getName = function (municipio) {
 
     const SAGUNTO = "Sagunto";

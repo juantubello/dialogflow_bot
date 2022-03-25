@@ -1,5 +1,7 @@
 const req = require('request');
 
+/* The `module.exports.get = function (params) {` is the function that will be called by the `get`
+method of the `SapQuery` class. */
 module.exports.get = function (params) { 
     return new Promise(function (resolve, reject) {
      fetchOdata(params).then(function (res) {
@@ -12,6 +14,11 @@ module.exports.get = function (params) {
     });
 };
 
+ /**
+  * It makes a request to the OData service and returns the response.
+  * @param params - {URL - FILTER - VALUE - BASICAUTH}
+  * @returns The response body is a JSON object that contains the results of the query.
+  */
   function fetchOdata(params) {
     return new Promise(function (resolve, reject) {
       let url = params.url;

@@ -39,6 +39,10 @@ app.post("/webhook", (request, response) => {
     agent.add(`I'm sorry, can you try again?`);
   }
 
+/**
+ * * This function is used to get the ClaseDocumento and Denominacion of a TipoDocSet entity
+ * @param agent - The agent object that is calling the action.
+ */
   async function claseDocumentoHandler(agent) {
 
     const claseDoc = agent.parameters.clasedocumento;
@@ -59,6 +63,16 @@ app.post("/webhook", (request, response) => {
 
   }
 
+/**
+ * * Get the city from the user and the date from the user. 
+ * * Call the API to get the weather information for the city and date. 
+ * * If the city is not found, show error response and promt the user to go back to the menu. 
+ * * If the city is found, ask the user if they want to know the weather for the next hours. 
+ * * If the user wants to know the weather for the next hours, call the API to get the weather
+ * information for the city and date. 
+ * * If the user wants to go back to the main menu, call the API to get the main menu.
+ * @param agent - The agent object that is currently handling the conversation.
+ */
   async function climaHandler(agent) {
     console.log(agent.context.contexts)
     let city = agent.parameters.option;
@@ -82,6 +96,11 @@ app.post("/webhook", (request, response) => {
     }
   }
 
+ /**
+  * It returns the weather forecast for the next 5 days for a given city.
+  * @param agent - The agent object that is currently handling the conversation.
+  * @returns The weather forecast for the next 5 days.
+  */
   async function climaDetalladoHandler(agent) {
 
     let contextResponse;
@@ -129,6 +148,11 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
 
+/**
+ * * Set the context to the previous output
+ * @param agent - the agent that received the message
+ * @param message - The message that the user sent to the bot.
+ */
 function setContext(agent, message){
 //update context to show full menu
 let context = agent.context.get('clima-followup');

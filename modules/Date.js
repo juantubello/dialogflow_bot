@@ -1,3 +1,4 @@
+/* A function that returns today's date in the format YYYY-MM-DD. */
 module.exports.today = function () {
     let today = new Date();
 
@@ -8,11 +9,13 @@ module.exports.today = function () {
     return today
 }
 
+/* Returning the date in the format YYYY-MM-DD. */
 module.exports.format = function (date) {
     let formattedDate = date.substring(0, 10);
     return formattedDate
 }
 
+/* A function that returns the date in the format [DayOfTheWeek][Number][Month]. */
 module.exports.dayString = function (date) {
 
     let day = date.substring(8, 10);

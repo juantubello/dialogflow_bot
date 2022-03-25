@@ -97,6 +97,7 @@ module.exports.getClimaMunicipio = async function (request) {
     });
 }
 
+/* It makes a request to the OpenWeatherMap API and returns the response. */
 module.exports.getClimaMunicipioDetallado = async function (request) {
     return new Promise(async function (resolve, reject) {
 
@@ -169,6 +170,11 @@ module.exports.getClimaMunicipioDetallado = async function (request) {
     });
 }
 
+/**
+ * It makes a request to the OpenWeatherMap API and returns the response.
+ * @param request - The request object that is passed to the function.
+ * @returns The response from the API.
+ */
 function getClima(request) {
     return new Promise(async function (resolve, reject) {
         let response;
@@ -193,6 +199,14 @@ function getClima(request) {
     });
 }
 
+/**
+ * This function takes a prediction object and a filters object and returns a string with the weather
+ * forecast for the day
+ * @param prediction - The weather prediction.
+ * @param filters - A dictionary with the following keys: { cielo
+ *                                                          temp }
+ * @returns a string with the weather forecast for the day.
+ */
 function getDetailMessage(prediction, filters) {
 
     let response = {
