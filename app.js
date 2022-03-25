@@ -59,8 +59,8 @@ app.post("/webhook", (request, response) => {
 
   }
 
-  async function climaHandler() {
-
+  async function climaHandler(agent) {
+    console.log(agent.context.contexts)
     let city = agent.parameters.option;
     let date = DateCustom.format(agent.parameters.date)
 
@@ -72,6 +72,7 @@ app.post("/webhook", (request, response) => {
     }
     let climaResponse = await Clima.getClimaMunicipio(climaRequest);
 
+    setContext(agent, climaResponse.message)
     agent.add(climaResponse.message);
 
     if (!climaResponse.notFound) {
@@ -82,6 +83,19 @@ app.post("/webhook", (request, response) => {
   }
 
   async function climaDetalladoHandler(agent) {
+
+    let contextResponse;
+
+    for (var key in agent.context.contexts) {
+      if (/clima-followup/.test(key)) {
+        // console.log('match!', agent.context.contexts[key]); // do stuff here!
+         contextResponse = agent.context.contexts[key].parameters.previousoutput
+    }
+  }
+
+  if(contextResponse.includes("❌ No existen predicciones del tiempo para fechas tan lejanas o anteriores al día de hoy ❌")) {
+    return agent.add("¿Cómo?")
+  }
 
     let city = agent.parameters.option;
    
@@ -114,3 +128,17 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
+function setContext(agent, message){
+//update context to show full menu
+let context = agent.context.get('clima-followup');
+if (!context) throw "User_data context ius nod defined in PreferrenceAdd"
+
+let context2 = new Object();
+context2 = {'name': 'clima-followup', 'lifespan': 5, 
+'parameters': context.parameters}; 
+
+context2.parameters.previousoutput = message;
+agent.context.set(context2);
+
+}
